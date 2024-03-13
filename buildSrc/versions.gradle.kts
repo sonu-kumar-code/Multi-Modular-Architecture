@@ -1,0 +1,1 @@
+extra["versions"] = mapOf("kotlin" to "1.9.20")

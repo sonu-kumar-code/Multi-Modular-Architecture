@@ -15,4 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "ComposeMultiModule"
 include(":app")
- 
+include(":app-navigation")
+include(":common")
+include(":onboarding")

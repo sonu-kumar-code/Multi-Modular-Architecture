@@ -1,22 +1,50 @@
+import com.app.composemultimodule.gradle.Android
+import com.app.composemultimodule.gradle.Library
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
+}
+hilt{
+    enableAggregatingTask = true
 }
 
 android {
+    compileSdk = Android.compileSdk
+    buildToolsVersion = Android.buildTools
     namespace = "com.app.composemultimodule"
-    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.app.composemultimodule"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = Android.minSdk
+        targetSdk = Android.targetSdk
         versionCode = 1
         versionName = "1.0"
 
+        testApplicationId = "com.app.composemultimodule.testing"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
+        testBuildType = System.getProperty("testBuildType","debug")
+        resourceConfigurations += mutableSetOf(
+            "en"
+        )
+        composeOptions {
+            kotlinCompilerExtensionVersion = com.app.composemultimodule.gradle.Version.composeCompiler
+        }
+        buildFeatures {
+            compose = true
+        }
+    }
+
+    testOptions {
+        unitTests {
+            all {
+                it.jvmArgs("-noverify")
+            }
+            tasks.withType<Test>().configureEach {
+                maxParallelForks = (System.getenv("UNIT_TEST_MAX_PARALLEL_FORKS") ?: "16").toInt()
+            }
         }
     }
 
@@ -30,40 +58,80 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
+        resources.excludes.add("META_INF/*")
+        resources.excludes.add("META_INF/licenses/ASM")
+        resources.excludes.add("META_INF/gradle/incremental.annotation.processors")
+        resources.excludes += "win32-x86-64/attach_hotspot_windows.dll"
+        resources.excludes += "win32-x86/attach_hotspot_windows.dll"
     }
 }
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    implementation("androidx.activity:activity-compose:1.7.0")
-    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation(project(":app-navigation"))
+
+    implementation(Library.kotlin.kotlinxSerialization)
+    implementation(Library.kotlin.kotlinxCollections)
+    implementation(Library.Androidx.splash)
+
+    implementation(Library.Material.material)
+
+    implementation(Library.Androidx.coreKtx)
+    implementation(Library.Androidx.workRuntime)
+    implementation(Library.Androidx.workRuntimeKtxExt)
+
+    implementation(Library.Hilt.core)
+    kapt(Library.Hilt.compiler)
+
+    implementation(Library.Accompanist.navigation)
+    implementation(Library.Accompanist.pager)
+    implementation(Library.Accompanist.pagerIndicators)
+    implementation(Library.Accompanist.systemUiController)
+
+    val composeBom = platform(Library.Compose.composeBillOfMaterials)
+    implementation(composeBom)
+    implementation(Library.Compose.activity)
+    implementation(Library.Compose.ui)
+    implementation(Library.Compose.tooling)
+    implementation(Library.Compose.compiler)
+    implementation(Library.Compose.animation)
+    implementation(Library.Compose.foundation)
+    implementation(Library.Compose.foundationLayout)
+    implementation(Library.Compose.material)
+    implementation(Library.Compose.material3)
+    implementation(Library.Compose.constraint)
+
+    androidTestImplementation(Library.Accompanist.navigation)
+    androidTestImplementation(Library.Accompanist.pager)
+    androidTestImplementation(Library.Accompanist.pagerIndicators)
+    androidTestImplementation(Library.Accompanist.systemUiController)
+
+
+    androidTestImplementation(Library.Androidx.Test.testJunit)
+    androidTestImplementation(Library.Androidx.Test.testRules)
+    androidTestImplementation(Library.Androidx.Test.uiautomator)
+    androidTestImplementation(Library.Androidx.Test.espresso)
+    androidTestImplementation(Library.Compose.activity)
+    androidTestImplementation(Library.Compose.composeUiTestJunit)
+    androidTestImplementation(Library.turbine)
+    androidTestImplementation(Library.Androidx.Test.testRunner)
+    androidTestImplementation(composeBom)
+
+    testImplementation(Library.mockk)
+    testImplementation(Library.Androidx.Test.archCoreTest)
+    androidTestImplementation(Library.Hilt.Test.hiltAndroidTest)
+    kaptAndroidTest(Library.Hilt.compiler)
+
+    implementation(platform(Library.Firebase.firebaseBillOfMaterials))
+    implementation(Library.Firebase.firebaseConfig)
+    implementation(Library.Firebase.firebaseAnalytics)
+
+    implementation(Library.Androidx.preferenceDataStore)
+
+
+
 }
